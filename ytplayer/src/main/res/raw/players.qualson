@@ -37,7 +37,6 @@
       },
       playerVars: {
         'autoplay': [AUTO_PLAY],
-        'autohide':[AUTO_HIDE],
         'rel': [REL],
         'showinfo': [SHOW_INFO],
         'enablejsapi': [ENABLE_JS_API],

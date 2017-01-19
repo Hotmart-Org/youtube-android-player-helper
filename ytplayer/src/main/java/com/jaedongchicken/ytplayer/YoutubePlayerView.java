@@ -30,7 +30,7 @@ public class YoutubePlayerView extends WebView {
     private YTParams params = new YTParams();
 
     private YouTubeListener youTubeListener;
-    private String backgroundColor = "#000000";
+    private String backgroundColor = "#FFFFFF";
 
     public YoutubePlayerView(Context context) {
         super(context);
@@ -43,36 +43,45 @@ public class YoutubePlayerView extends WebView {
     }
 
     @SuppressLint("JavascriptInterface")
-    public void initialize(String videoId, YouTubeListener youTubeListener) {
-        WebSettings set = this.getSettings();
-        set.setJavaScriptEnabled(true);
-        set.setUseWideViewPort(true);
-        set.setLoadWithOverviewMode(true);
-        set.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.NORMAL);
-        set.setCacheMode(WebSettings.LOAD_NO_CACHE);
-        set.setPluginState(WebSettings.PluginState.ON);
-        set.setPluginState(WebSettings.PluginState.ON_DEMAND);
-        set.setAllowContentAccess(true);
-        set.setAllowFileAccess(true);
-
-        this.youTubeListener = youTubeListener;
-        this.setLayerType(View.LAYER_TYPE_NONE, null);
-        this.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-        this.addJavascriptInterface(bridge, "QualsonInterface");
-        this.loadDataWithBaseURL("http://www.youtube.com", getVideoHTML(videoId), "text/html", "utf-8", null);
-        this.setLongClickable(true);
-        this.setOnLongClickListener(new OnLongClickListener() {
+    public void initialize(final String videoId, final YouTubeListener youTubeListener) {
+        this.post(new Runnable() {
             @Override
-            public boolean onLongClick(View v) {
-                return true;
+            public void run() {
+                WebSettings set = YoutubePlayerView.this.getSettings();
+                set.setJavaScriptEnabled(true);
+                set.setUseWideViewPort(true);
+                set.setLoadWithOverviewMode(true);
+                set.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.NORMAL);
+                set.setCacheMode(WebSettings.LOAD_NO_CACHE);
+                set.setPluginState(WebSettings.PluginState.ON);
+                set.setPluginState(WebSettings.PluginState.ON_DEMAND);
+                set.setAllowContentAccess(true);
+                set.setAllowFileAccess(true);
+
+                set.setSupportZoom(true);
+                set.setBuiltInZoomControls(true);
+                set.setDisplayZoomControls(false);
+
+                YoutubePlayerView.this.youTubeListener = youTubeListener;
+                YoutubePlayerView.this.setLayerType(View.LAYER_TYPE_NONE, null);
+                YoutubePlayerView.this.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+                YoutubePlayerView.this.addJavascriptInterface(bridge, "QualsonInterface");
+                YoutubePlayerView.this.loadDataWithBaseURL("http://www.youtube.com", getVideoHTML(videoId), "text/html", "utf-8", null);
+                YoutubePlayerView.this.setLongClickable(true);
+                YoutubePlayerView.this.setOnLongClickListener(new OnLongClickListener() {
+                    @Override
+                    public boolean onLongClick(View v) {
+                        return true;
+                    }
+                });
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && BuildConfig.DEBUG) {
+                    setWebContentsDebuggingEnabled(true);
+                }
+
+                YoutubePlayerView.this.setWebChromeClient(new WebChromeClient());
             }
         });
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && BuildConfig.DEBUG) {
-            setWebContentsDebuggingEnabled(true);
-        }
-
-        this.setWebChromeClient(new WebChromeClient());
     }
 
     public void initialize(String videoId, YTParams params, YouTubeListener youTubeListener) {
@@ -90,7 +99,7 @@ public class YoutubePlayerView extends WebView {
     }
 
     public void setWhiteBackgroundColor() {
-        backgroundColor = "#ffffff";
+        backgroundColor = "#000000";
     }
 
     public void setAutoPlayerHeight(Context context) {
@@ -114,7 +123,12 @@ public class YoutubePlayerView extends WebView {
 
     public void play() {
         JLog.d("play");
-        this.loadUrl("javascript:onVideoPlay()");
+        this.post(new Runnable() {
+            @Override
+            public void run() {
+                YoutubePlayerView.this.loadUrl("javascript:onVideoPlay()");
+            }
+        });
     }
 
     public void onLoadVideo(String videoId, float mil) {
@@ -247,7 +261,7 @@ public class YoutubePlayerView extends WebView {
         protected WeakReference<Activity> activityRef;
 
         public MyWebViewClient(Activity activity) {
-            this.activityRef = new WeakReference<Activity>(activity);
+            this.activityRef = new WeakReference<>(activity);
         }
 
         @Override
@@ -316,13 +330,12 @@ public class YoutubePlayerView extends WebView {
 
                 String html = sb.toString().replace("[VIDEO_ID]", videoId).replace("[BG_COLOR]", backgroundColor);
                 html = html.replace("[AUTO_PLAY]", String.valueOf(params.getAutoplay()))
-                        .replace("[AUTO_HIDE]", String.valueOf(params.getAutohide()))
-                        .replace("[REL]", String.valueOf(params.getRel()))
-                        .replace("[SHOW_INFO]", String.valueOf(params.getShowinfo()))
-                        .replace("[ENABLE_JS_API]", String.valueOf(params.getEnablejsapi()))
-                        .replace("[DISABLE_KB]", String.valueOf(params.getDisablekb()))
-                        .replace("[CC_LANG_PREF]", String.valueOf(params.getCc_lang_pref()))
-                        .replace("[CONTROLS]", String.valueOf(params.getControls()));
+                           .replace("[REL]", String.valueOf(params.getRel()))
+                           .replace("[SHOW_INFO]", String.valueOf(params.getShowinfo()))
+                           .replace("[ENABLE_JS_API]", String.valueOf(params.getEnablejsapi()))
+                           .replace("[DISABLE_KB]", String.valueOf(params.getDisablekb()))
+                           .replace("[CC_LANG_PREF]", String.valueOf(params.getCc_lang_pref()))
+                           .replace("[CONTROLS]", String.valueOf(params.getControls()));
                 return html;
             }
         } catch (Exception e) {
